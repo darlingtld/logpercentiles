@@ -6,7 +6,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,8 +44,9 @@ public class MetricsReporter {
         File[] logFiles = file.listFiles();
         MetricsStore metricsStore = new MetricsStore();
         if (logFiles != null && logFiles.length > 0) {
+//            use thread pool to calculate the metrics for each log file
             CountDownLatch countDownLatch = new CountDownLatch(logFiles.length);
-            ExecutorService executorService = Executors.newFixedThreadPool(logFiles.length);
+            ExecutorService executorService = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() / 2, Runtime.getRuntime().availableProcessors() + 1, 0, TimeUnit.HOURS, new LinkedBlockingDeque<>());
             for (File logFile : logFiles) {
                 executorService.submit(() -> {
                     try {
